@@ -1,0 +1,128 @@
+body {
+    background-image: url('/img/background_01.jpg');
+}
+
+h1,h2,h3,h4,h5,h6, label {
+    color: #ffffff;
+}
+
+label {
+    font-size: 14pt;
+}
+
+#logoTitle {
+    margin: 40px;
+    text-align: center;
+    font-size: 80px;
+    font-family: Arial;
+    font-style: italic;
+
+    text-shadow: -2px 4px 2px #323a6d;
+}
+
+#logoTitle a {
+    color: #ffffff;
+}
+
+#logoTitle a:hover {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+
+#links {
+    list-style: lower-alpha;
+    font-family: Arial;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+#links li {
+    margin-bottom: 10px;
+}
+
+#links input {
+    width: 98%;
+}
+
+#links a {
+    color: #00ee99;
+    font-size: 12pt;
+    text-align: left;
+    font-family: monospace;
+}
+
+
+#parts-list {
+    list-style: none;
+    color: #ffffff;
+}
+
+#letters-left {
+    font-family: monospace;
+    font-size: 12pt;
+    font-weight: bold;
+}
+
+#persistBtn a {
+    margin-top: 20px;
+    width: 96.5%;
+    font-size: 14pt;
+}
+
+#summary li, p{
+ font-family: monospace;
+ font-size: 14px;
+ font-weight: 700;
+ color: #ffffff;
+}
+
+#summary p {
+    display: inline-block;
+    text-align: left;
+    width: 60%;
+}
+
+#summary li {
+    display: inline-block;
+    text-align: right;
+    width: 100%;
+}
+
+#summary > ul > li:last-child {
+    border-top: solid 1px #ffffff;
+}
+
+#summary > ul {
+    list-style: none;
+
+}
+
+#links.read-only {
+    font-size: 13pt;
+    list-style: none;
+}
+
+.read-only a {
+    text-align: left;
+    float: left;
+}
+
+
+.read-only li {
+    width: 98%;
+    color : rgba(0,0,0,0);
+}
+
+.read-only li:hover {
+    color : #ffffff;
+}
+
+.read-only-note  {
+    font-size: 12pt;
+    font-family: monospace;
+    color: #ffffff;
+    font-weight: bold;
+    font-style: italic;
+    text-rendering: optimizeLegibility;
+}
