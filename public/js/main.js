@@ -9,7 +9,7 @@ function debug(msg) {
 
 require(
 [
-    'order!lib/jquery',
+    'order!lib/jquery.1.7.1',
     'order!lib/underscore',
     'order!lib/backbone',
     'order!lib/backbone.marionette',
