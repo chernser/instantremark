@@ -1,0 +1,23 @@
+
+div.span8
+    h2 Links
+    ul.read-only#links
+        |\n<%
+        |   _.each(links, function(link, index) {
+        | %>
+        li
+            |   <a href="<%=link.link%>"><%=link.desc %></a>
+        |\n <%  }); %>
+    br
+    h2 Note
+        p.read-only-note#note
+            | <%= note %>
+
+div.span4
+    label   Link to this
+    input#linkToThis(value="http://localhost:4000/")
+    p
+        a.btn.btn-small I want shorter link
+    p
+        a.btn.btb-small I want QR code
+

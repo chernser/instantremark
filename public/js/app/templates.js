@@ -4,7 +4,14 @@
  */
 Backbone.Marionette.TemplateManager.loadTemplate = function(templateId, callback){
     var that = this;
-    $.get("/templates/" + templateId + ".html", function(template){
+    var templateRoot = "/templates/";
+
+    // TODO: create separate namespace for view templates
+    if ((templateId == 'create') || (templateId == 'read')){
+        templateRoot = "/view/";
+    }
+
+    $.get(templateRoot + templateId + ".html", function(template){
         callback.call(this, template);
     });
 }

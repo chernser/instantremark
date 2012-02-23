@@ -1,25 +1,21 @@
 
-var app = null;
+// Namespace object
+var InstantRemark = {};
 
+require(['domReady', 'order!app/templates', 'order!app/router.app', 'order!app/model.remark', 'order!app/view.create', 'order!app/view.read'], function() {
 
+    InstantRemark.app = new Backbone.Marionette.Application();
 
-function initializeRoute() {
-
-}
-
-
-
-require(['domReady', 'order!app/templates', 'order!app/create_view'], function() {
-    app = new Backbone.Marionette.Application();
-
-    app.addInitializer(initializeRoute.bind(app));
-
-    app.addRegions({
+    InstantRemark.app.addRegions({
         mainRegion : "#_main"
     });
 
-    var defaultViewModel = new CreateViewModel();
+   /* var defaultViewModel = new RemarkModel();
     var defaultView = new CreateView({model : defaultViewModel});
-    app.mainRegion.show(defaultView);
+    InstantRemark.app.mainRegion.show(defaultView);*/
 
+    // Bind our router
+    InstantRemark.router = new AppRouter();
+    Backbone.history.start();
 });
+

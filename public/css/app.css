@@ -106,3 +106,7 @@ p {
   font-style: italic;
   text-rendering: optimizeLegibility;
 }
+#newBtnWrapper {
+  padding-top: 5em;
+  text-align: center;
+}
