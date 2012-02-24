@@ -5,7 +5,7 @@
 
   config = {
     server: {
-      domain: "localhost",
+      domain: "78.47.49.14",
       port: 4000
     }
   };
