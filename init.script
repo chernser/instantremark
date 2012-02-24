@@ -1,0 +1,43 @@
+#! /bin/sh
+
+PATH=/opt/pnode:/root/local/node/bin:/root/local/node/lib/node_modules:/sbin:/bin
+
+DESC="Node.js-based service"
+NAME=node
+DAEMON=/root/local/node/bin/$NAME
+DAEMON_ARGS="/opt/pnode/index.js"
+
+test -x $DAEMON || exit 0
+set -e
+. /lib/lsb/init-functions
+
+case "$1" in
+  start)
+        echo -n "Starting $DESC: "
+        start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid -b -m \
+                --exec $DAEMON -- $DAEMON_ARGS || true
+        echo "$NAME."
+        ;;
+  stop)
+        echo -n "Stopping $DESC: "
+        start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
+                --exec $DAEMON || true
+        echo "$NAME."
+        ;;
+  restart)
+        echo -n "Restarting $DESC: "
+        start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid -b -m \
+                --exec $DAEMON -- $DAEMON_ARGS || true
+        sleep 1
+
+        start-stop-daemon --start --quiet --pidfile \
+                /var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS || true
+        echo "$NAME."
+        ;;
+  *)
+        echo "Usage: $NAME {start|stop|restart}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
