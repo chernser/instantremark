@@ -131,9 +131,18 @@ var CreateView = Backbone.View.extend({
 
     },
 
-    save : function() {
+    save:function () {
         debug("saving model");
-        this.model.save();
+        this.model.save({}, {
+            success:function (model, response) {
+                debug("model save and got id: " + model.id);
+                InstantRemark.router.navigate('remark/' + model.id, {trigger:true});
+            },
+
+            error:function (model, reponse) {
+                debug("error occured while save");
+            }
+        });
     }
 
 });

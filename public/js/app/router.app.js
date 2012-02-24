@@ -21,9 +21,26 @@ var AppRouter = Backbone.Router.extend({
     showRemark : function(id) {
         debug("show remark with id: " + id + " at " + new Date());
         InstantRemark.model = new RemarkModel({_id: id});
-        InstantRemark.model.fetch();
+        InstantRemark.model.fetch({
+            success: function(model, response) {
+                // Should we path model instead
+                InstantRemark.view_read = new ReadView({model: InstantRemark.model});
+                InstantRemark.app.mainRegion.show(InstantRemark.view_read);
+            },
+            error: function(model, response) {
+                debug(response.status);
 
-        InstantRemark.view_read = new ReadView({model: InstantRemark.model});
-        InstantRemark.app.mainRegion.show(InstantRemark.view_read);
+                var error = {errorCode: response.status};
+                if (response.status == 400)
+                    error.errorMessage = "Invalid remark reference. Please check.";
+                if (response.status == 404)
+                    error.errorMessage = "Remark not found.";
+
+                var errorView = new ErrorView(error);
+                InstantRemark.app.mainRegion.show(errorView);
+            }
+        });
+
+
     }
 });

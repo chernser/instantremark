@@ -1,15 +1,18 @@
 (function() {
-  var DbObjectID, app, config, db, express, jade, mongo, publicPath, stylus, _;
+  var DbObjectID, app, assignShortLink, config, db, express, jade, mongo, publicPath, stylus, urlshortener, _;
 
   express = require("express");
 
   config = {
     server: {
+      domain: "localhost",
       port: 4000
     }
   };
 
   app = express.createServer();
+
+  urlshortener = require("./urlshortener");
 
   jade = require("jade");
 
@@ -52,15 +55,68 @@
 
   DbObjectID = mongo.ObjectID;
 
-  app.get('/remark/:id', function(req, res) {
+  assignShortLink = function(remark, res) {
+    var link;
+    if (_.isUndefined(remark.shortLink)) {
+      link = "http://" + config.server.domain + ":" + config.server.port + "/#remark/" + remark._id;
+      console.log("requesting short link for: " + link);
+      return urlshortener.makeShort(link, function(shortLink, err) {
+        if (shortLink !== null) {
+          console.log(shortLink);
+          remark.shortLink = shortLink;
+          res.send(remark);
+          db.collection("remark", function(err, collection) {
+            return collection.save(remark);
+          });
+          return;
+        }
+        console.log("error occure");
+        if (err !== null) return console.log(err);
+      });
+    } else {
+      console.log("short link exists");
+      return res.send(remark);
+    }
+  };
+
+  app.post('/remark/:id/shortlink', function(req, res) {
     var remarkId;
-    remarkId = new DbObjectID.createFromHexString(req.params.id);
+    try {
+      remarkId = new DbObjectID.createFromHexString(req.params.id);
+    } catch (ex) {
+      res.send(400);
+      return;
+    }
     return db.collection("remark", function(err, collection) {
       return collection.find({
         '_id': remarkId
       }, function(err, cursor) {
         return cursor.nextObject(function(err, obj) {
-          return res.json(obj);
+          if (obj === null) res.send(404);
+          return assignShortLink(obj, res);
+        });
+      });
+    });
+  });
+
+  app.get('/remark/:id', function(req, res) {
+    var remarkId;
+    try {
+      remarkId = new DbObjectID.createFromHexString(req.params.id);
+    } catch (ex) {
+      res.send(400);
+      return;
+    }
+    return db.collection("remark", function(err, collection) {
+      return collection.find({
+        '_id': remarkId
+      }, function(err, cursor) {
+        return cursor.nextObject(function(err, obj) {
+          if (obj !== null) {
+            return res.json(obj);
+          } else {
+            return res.send(404);
+          }
         });
       });
     });
@@ -78,7 +134,9 @@
     }
   });
 
-  app.put('/remark', function(req, res) {});
+  app.put('/remark', function(req, res) {
+    return res.send(405);
+  });
 
   app.listen(config.server.port);
 
