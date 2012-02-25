@@ -22,5 +22,11 @@ require([
     // Bind our router
     InstantRemark.router = new AppRouter();
     Backbone.history.start();
+
+    var link =  "http://www.google.com/recaptcha/api/challenge?k=6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7";
+
+    //document.write("<script src='" + link + "'><\/script>");
+
+    //$("#loadedScript").attr("src", link);
 });
 

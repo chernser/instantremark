@@ -1,5 +1,4 @@
 
-
 var ReadView = Backbone.View.extend({
 
     model: null,
@@ -8,7 +7,6 @@ var ReadView = Backbone.View.extend({
         this.model = attributes.model;
 
     },
-
 
     render: function() {
         var that = this;
@@ -19,11 +17,19 @@ var ReadView = Backbone.View.extend({
 
             var html = _.template(tmpl);
 
-            $(that.el).html(html({
-                links:that.model.get("links"),
-                note: that.model.get("note"),
-                selfLink: window.location
-            }));
+            $(that.el).html(tmpl);
+
+            var linksEl = $(that.el).find("#links");
+
+            _.each(that.model.get("links"), function(link, index) {
+                var desc = _.isEmpty(link.desc) ? 'Link #' + index : link.desc;
+                $('<li><a href="' + link.link +'" >' + desc + '</a></li>').
+                    appendTo(linksEl);
+            });
+
+            $(that.el).find("#note").text(that.model.get("note"));
+            $(that.el).find("#selfLink").val(window.location);
+
             deferedObj.resolve();
         });
 
@@ -36,12 +42,13 @@ var ReadView = Backbone.View.extend({
         'click #qrCodeBtn' : 'createQrCode'
     },
 
+
+
     obtainShortLink: function () {
-        var remarkId = this.model.id;
         var that = this;
 
         $.ajax({
-            url: "http://localhost:4000/remark/" + remarkId + "/shortlink",
+            url: "/remark/" + this.model.id + "/shortlink",
             type: "POST",
             success: function(data) {
                 debug("success!!!");
@@ -60,7 +67,7 @@ var ReadView = Backbone.View.extend({
     },
 
     createQrCode: function() {
-        var link = "http://localhost:4000/remark/" + this.model.id + "/shortlink";
+        var link = "/remark/" + this.model.id + "/shortlink";
         if (this.model.get("shortLink") != null)
             link = this.model.get("shortLink");
 

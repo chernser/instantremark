@@ -4,40 +4,28 @@
             <li><h2>Links</h2>
 
                 <ul id="links">
-
-                    <%
-                        _.each(linkAlphas, function(alpha, index) {
-                            var l = model.getLinkAt(index);
-                    %>
-
-                        <li id="<%=alpha%>Link">
-                            <input rel="link" placeholder="URL <%=alpha %>" value="<%= l != null ? l.link : '' %>">
-                            <input rel="desc" placeholder="Description for Link <%=alpha %>" >
-                        </li>
-                    <%
-                        });
-                    %>
                 </ul>
-
-                <% if (canAddMore) { %>
 
                 <p id="addLinks" style="text-align: center;">
                     <a id="addMoreLinks" class="btn btn-primary">
                         <i class="icon-plus icon-white"></i>
-                        <%= addLinksCaption %>
+
                     </a>
                 </p>
 
-                <% } %>
             </li>
 
-            <li><h2>Note</h2>
+            <li>
+                <h2>Note</h2>
                 <textarea id="note" style="width: 98%;" rows="10" cols="80"><%= model.get("note") %></textarea>
                 <p id="letters-left" style="text-align: right">640000 chars left</p>
             </li>
 
+            <li id="captcha"></li>
 
             <li>
+                <p id="errorMsg"></p>
+
                 <p id="persistBtn">
                     <a class="btn btn-primary">
                         persist
@@ -51,9 +39,10 @@
     <div class="span4">
         <div id="summary">
             <ul>
-                <li><p>Bytes in links:</p>340 233</li>
-                <li><p>Bytes in notes:</p>340 233</li>
-                <li><p>Total bytes:</p>680 000</li>
+                <li id="linkBytes"><p>Bytes in links:</p>33340 233</li>
+                <li id="noteBytes"><p>Bytes in notes:</p>340 233</li>
+                <li id="totBytes"><p>Total bytes:</p>680 000</li>
+                <li id="leftBytes"><p>Total bytes:</p>680 000</li>
             </ul>
         </div>
     </div>

@@ -13,24 +13,38 @@ var CreateView = Backbone.View.extend({
     },
 
     render: function() {
-
         var that = this;
+
         var deferedObj = $.Deferred();
 
         Backbone.Marionette.TemplateManager.get('create', function (tmpl) {
+            var html = _.template(tmpl);
 
-            var linkAlphas = getNAlphas('a', that.numberOfLinks);
+            $(that.el).html(tmpl);
 
-            var btnAlphas = getNextNAlphas(_.last(linkAlphas), that.numberOfLinks < 24 ? 3 : 2);
-            var canAddMore = that.numberOfLinks + 3 < 28;
-            var html = _.template(tmpl, {
-                linkAlphas:linkAlphas,
-                addLinksCaption:btnAlphas.join(","),
-                canAddMore:canAddMore,
-                model:that.model
+            var linksEl = $(that.el).find("#links");
+
+            var alphas = getNAlphas('a', that.numberOfLinks);
+            for (var i = 0; i < that.numberOfLinks; ++i) {
+                $('<li id="' + alphas[i] + 'Link"><input rel="link" value="" placeholder="URL ' + alphas[i] + '">'+
+                  '<input rel="desc" value="" placeholder="Short decsription of URL ' + alphas[i] + '"></li>')
+                    .appendTo(linksEl);
+            }
+
+
+            _.each(that.model.get("links"), function(link, index) {
+                $("#" + alphas[index] + "Link > input[rel=\"link\"]").val(link.link);
+                $("#" + alphas[index] + "Link > input[rel=\"desc\"]").val(link.desc);
             });
 
-            $(that.el).html(html);
+            $(that.el).find("#note").val(that.model.get("note"));
+
+            require(["http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"], function(module) {
+                Recaptcha.create("6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7", "captcha", {
+                    callback: function() {}
+                });
+            });
+
             deferedObj.resolve();
         });
 
@@ -133,16 +147,27 @@ var CreateView = Backbone.View.extend({
 
     save:function () {
         debug("saving model");
-        this.model.save({}, {
+        this.model.save({
+            recaptcha_challenge_field: $("#recaptcha_challenge_field").val(),
+            recaptcha_response_field: $("#recaptcha_response_field").val()
+        }, {
             success:function (model, response) {
                 debug("model save and got id: " + model.id);
                 InstantRemark.router.navigate('remark/' + model.id, {trigger:true});
             },
 
-            error:function (model, reponse) {
+            error:function (model, response) {
                 debug("error occured while save");
+                try {
+                    var error = JSON.parse(response.responseText);
+                    if (!_.isUndefined(error.desc))
+                        $("#errorMsg").text(error.desc);
+                    if (error.error == 3)
+                        Recaptcha.reload();
+                } catch (e) {
+                    $("#errorMsg").text("Error occured while save");
+                }
             }
         });
     }
-
 });

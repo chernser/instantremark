@@ -1,11 +1,12 @@
 (function() {
-  var DbObjectID, app, assignShortLink, config, db, express, jade, mongo, publicPath, stylus, urlshortener, _;
+  var DbObjectID, Recaptcha, app, assignShortLink, config, db, express, isValidUrl, mongo, publicPath, recaptchaPrivateKey, recaptchaPublicKey, stylus, urlshortener, validateCaptcha, validateRemark, _;
 
   express = require("express");
 
   config = {
+    maxRemarkLen: 640000,
     server: {
-      domain: "78.47.49.14",
+      domain: "localhost",
       port: 4000
     }
   };
@@ -13,8 +14,6 @@
   app = express.createServer();
 
   urlshortener = require("./urlshortener");
-
-  jade = require("jade");
 
   stylus = require("stylus");
 
@@ -28,8 +27,7 @@
       layout: false,
       pretty: true
     });
-    app.set('views', publicPath + '/views');
-    app.set('view engine', 'jade');
+    app.set('view engine', 'html');
     app.use(express.bodyParser());
     stylusConf = {
       src: __dirname + '/stylus/',
@@ -49,11 +47,107 @@
     return res.render('index', {});
   });
 
-  app.get('/view/:view.html', function(req, res) {
-    return res.render(req.params.view, {});
+  recaptchaPublicKey = "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7";
+
+  recaptchaPrivateKey = "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq";
+
+  Recaptcha = require("recaptcha").Recaptcha;
+
+  app.get('/captcha', function(req, res) {
+    return res.send(recaptchaInst.toHTML());
   });
 
   DbObjectID = mongo.ObjectID;
+
+  app.get('/remark/:id', function(req, res) {
+    var remarkId;
+    try {
+      remarkId = new DbObjectID.createFromHexString(req.params.id);
+    } catch (ex) {
+      res.send(400);
+      return;
+    }
+    return db.collection("remark", function(err, collection) {
+      return collection.find({
+        '_id': remarkId
+      }, function(err, cursor) {
+        return cursor.nextObject(function(err, obj) {
+          if (obj !== null) {
+            return res.json(obj);
+          } else {
+            return res.send(404);
+          }
+        });
+      });
+    });
+  });
+
+  isValidUrl = function(url) {
+    return /^([a-z]([a-z]|\d|\+|-|\.)*):(\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?((\[(|(v[\da-f]{1,}\.(([a-z]|\d|-|\.|_|~)|[!\$&'\(\)\*\+,;=]|:)+))\])|((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=])*)(:\d*)?)(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*|(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)|((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)|((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)){0})(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.test(url);
+  };
+
+  validateRemark = function(remark) {
+    var bytes;
+    bytes = 0;
+    if (!_.isUndefined(remark.link)) {
+      _.each(remark.links, function(link, index) {});
+    }
+    if (!_.isUndefined(remark.note)) bytes += remark.note.length;
+    if (bytes > config.maxRemarkLen) {
+      throw {
+        error: 1,
+        desc: "Remark total size should be &le; " + config.maxRemarkLen
+      };
+    }
+    if (bytes === 0) {
+      throw {
+        error: 2,
+        desc: "We do not store empty remarks"
+      };
+    }
+  };
+
+  validateCaptcha = function(req, callback) {
+    var data, recaptcha;
+    data = {
+      remoteip: req.connection.remoteAddress,
+      challenge: req.body.recaptcha_challenge_field,
+      response: req.body.recaptcha_response_field
+    };
+    recaptcha = new Recaptcha(recaptchaPublicKey, recaptchaPrivateKey, data);
+    return recaptcha.verify(callback);
+  };
+
+  app.post('/remark/', function(req, res) {
+    return validateCaptcha(req, function(success, error) {
+      var remark;
+      if (!success) {
+        res.send({
+          error: 3,
+          desc: "Invalid captcha. Try again, please"
+        }, 400);
+        return;
+      }
+      if (req.is('*/json')) {
+        remark = req.body;
+        try {
+          validateRemark(remark);
+          return db.collection("remark", function(err, collection) {
+            return collection.insert(remark, function(err, objects) {
+              return res.json(_.first(objects));
+            });
+          });
+        } catch (e) {
+          console.log(e);
+          return res.send(e, 400);
+        }
+      }
+    });
+  });
+
+  app.put('/remark', function(req, res) {
+    return res.send(405);
+  });
 
   assignShortLink = function(remark, res) {
     var link;
@@ -97,45 +191,6 @@
         });
       });
     });
-  });
-
-  app.get('/remark/:id', function(req, res) {
-    var remarkId;
-    try {
-      remarkId = new DbObjectID.createFromHexString(req.params.id);
-    } catch (ex) {
-      res.send(400);
-      return;
-    }
-    return db.collection("remark", function(err, collection) {
-      return collection.find({
-        '_id': remarkId
-      }, function(err, cursor) {
-        return cursor.nextObject(function(err, obj) {
-          if (obj !== null) {
-            return res.json(obj);
-          } else {
-            return res.send(404);
-          }
-        });
-      });
-    });
-  });
-
-  app.post('/remark/', function(req, res) {
-    var remark;
-    if (req.is('*/json')) {
-      remark = req.body;
-      return db.collection("remark", function(err, collection) {
-        return collection.insert(remark, function(err, objects) {
-          return res.json(_.first(objects));
-        });
-      });
-    }
-  });
-
-  app.put('/remark', function(req, res) {
-    return res.send(405);
   });
 
   app.listen(config.server.port);

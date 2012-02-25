@@ -13,7 +13,8 @@
         "jade" : "0.20.x",
         "stylus" : "0.x.x",
         "mongodb" : "0.9.x",
-        "connect" : "1.8.x"
+        "connect" : "1.8.x",
+        "recaptcha": "1.x.x"
   },
   "devDependencies": {
     "vows": "0.6.x"

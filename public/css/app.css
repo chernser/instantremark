@@ -89,7 +89,6 @@ p {
 }
 .read-only a {
   text-align: left;
-  float: left;
 }
 .read-only li {
   width: 98%;
