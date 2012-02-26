@@ -61,7 +61,10 @@
   });
 
   app.configure('development', function() {
-    return LOG.info('Configuring for development');
+    LOG.info('Configuring for development');
+    config.server.domain = "localhost";
+    config.captcha.service.publicKey = "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7";
+    return config.captcha.service.privateKey = "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq";
   });
 
   mongo = require("mongodb");

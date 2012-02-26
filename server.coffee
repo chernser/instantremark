@@ -61,10 +61,10 @@ app.configure('production', () ->
 app.configure('development', () ->
   LOG.info('Configuring for development')
 
-    config.server.domain = "localhost"
+  config.server.domain = "localhost"
 
-    config.captcha.service.publicKey = "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7"
-    config.captcha.service.privateKey = "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq"
+  config.captcha.service.publicKey = "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7"
+  config.captcha.service.privateKey = "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq"
 )
 
 ## Here is main app logic
