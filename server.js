@@ -195,7 +195,9 @@
   assignShortLink = function(remark, res) {
     var link;
     if (_.isUndefined(remark.shortLink)) {
-      link = "http://" + config.server.domain + ":" + config.server.port + "/#remark/" + remark._id;
+      link = "http://" + config.server.domain;
+      if (config.server.port !== 80) link += ":" + config.server.port;
+      link += "/#remark/" + remark._id;
       console.log("requesting short link for: " + link);
       return urlshortener.makeShort(link, function(shortLink, err) {
         if (shortLink !== null) {
