@@ -1,111 +1,73 @@
-body {
-  background-image: url("/img/background_01.jpg");
+/* Fix chrome non-standard behaviour of placeholder values on focus */
+input:focus::-webkit-input-placeholder {
+  color: transparent;
 }
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-label {
-  color: #fff;
+.header-bar {
+  position: fixed;
+  display: block;
+  z-index: 1200;
+  background-color: #fff;
+  width: 100%;
+  padding-top: 5px;
 }
-label {
-  font-size: 14pt;
+.header-bottom-shadow {
+  width: 100%;
+  position: fixed;
+  display: block;
+  z-index: 1100;
+  left: 0;
+  height: 45px;
+  box-shadow: 0px 0px 25px #000;
 }
-#logoTitle {
-  margin: 40px;
-  text-align: center;
-  font-size: 80px;
-  font-family: Arial;
-  font-style: italic;
-  text-shadow: -2px 4px 2px #323a6d;
+.main-content {
+  position: relative;
+  top: 70px;
 }
-#logoTitle a {
-  color: #fff;
+.inline-el {
+  display: inline;
 }
-#logoTitle a:hover {
-  color: #fff;
+.big-font {
+  font-size: 16pt;
+}
+.action-link:hover {
   text-decoration: none;
 }
+.centered {
+  text-align: center;
+}
+.hseparator-10 {
+  display: inline-block;
+  width: 10px;
+}
 #links {
+  font-size: 12pt;
   list-style: lower-alpha;
-  font-family: Arial;
-  font-weight: 800;
-  color: #fff;
+  color: #aaa;
 }
-#links li {
-  margin-bottom: 10px;
-}
-#links input {
-  width: 98%;
-}
-#links a {
-  color: #0e9;
-  font-size: 12pt;
-  text-align: left;
-  font-family: monospace;
-}
-#parts-list {
-  list-style: none;
-  color: #fff;
-}
-#letters-left {
-  font-family: monospace;
-  font-size: 12pt;
-  font-weight: bold;
-}
-#persistBtn a {
-  margin-top: 20px;
-  width: 96.5%;
+#links li a {
   font-size: 14pt;
 }
-#summary li,
-p {
-  font-family: monospace;
-  font-size: 14px;
-  font-weight: 700;
-  color: #fff;
+@media (min-width: 480px) {
+  #links li input {
+    width: 97%;
+  }
 }
-#summary p {
-  display: inline-block;
-  text-align: left;
-  width: 60%;
+@media (max-width: 480px) {
+  #links li input {
+    width: 360px;
+  }
 }
-#summary li {
-  display: inline-block;
-  text-align: right;
-  width: 100%;
+#note {
+  font-size: 14pt;
+  font-family: sans-serif;
 }
-#summary > ul > li:last-child {
-  border-top: solid 1px #fff;
+#selfLink {
+  padding: 3px;
 }
-#summary > ul {
-  list-style: none;
+.btn-small {
+  margin-bottom: 9px;
+  padding: 4px 6px 4px 6px;
 }
-#links.read-only {
-  font-size: 13pt;
-  list-style: none;
-}
-.read-only a {
-  text-align: left;
-}
-.read-only li {
-  width: 98%;
-  color: rgba(0,0,0,0.00);
-}
-.read-only li:hover {
-  color: #fff;
-}
-.read-only-note {
-  font-size: 12pt;
-  font-family: monospace;
-  color: #fff;
-  font-weight: bold;
-  font-style: italic;
-  text-rendering: optimizeLegibility;
-}
-#newBtnWrapper {
-  padding-top: 5em;
-  text-align: center;
+#qrCodeCanvas {
+  margin-top: 20px;
 }

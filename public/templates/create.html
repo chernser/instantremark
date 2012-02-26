@@ -1,48 +1,28 @@
-    <div class="span8">
+<div class="span7">
+    <h3>Links</h3>
 
-        <ul id="parts-list">
-            <li><h2>Links</h2>
+    <ul id="links">
+    </ul>
 
-                <ul id="links">
-                </ul>
+    <p id="addLinks" class="centered">
+        <a id="addMoreLinks" class="btn btn-primary">
+            <i class="icon-plus icon-white"></i>
+        </a>
+    </p>
 
-                <p id="addLinks" style="text-align: center;">
-                    <a id="addMoreLinks" class="btn btn-primary">
-                        <i class="icon-plus icon-white"></i>
 
-                    </a>
-                </p>
+    <h3>Note</h3>
+    <textarea id="note" style="width: 98%;" rows="10" cols="80"></textarea>
 
-            </li>
+    <p id="letters-left" style="text-align: right">640000 chars left</p>
 
-            <li>
-                <h2>Note</h2>
-                <textarea id="note" style="width: 98%;" rows="10" cols="80"><%= model.get("note") %></textarea>
-                <p id="letters-left" style="text-align: right">640000 chars left</p>
-            </li>
+    <div class="centered" id="captcha"></div>
 
-            <li id="captcha"></li>
+    <p id="errorMsg"></p>
 
-            <li>
-                <p id="errorMsg"></p>
-
-                <p id="persistBtn">
-                    <a class="btn btn-primary">
-                        persist
-                    </a>
-                </p>
-            </li>
-        </ul>
-
-    </div>
-
-    <div class="span4">
-        <div id="summary">
-            <ul>
-                <li id="linkBytes"><p>Bytes in links:</p>33340 233</li>
-                <li id="noteBytes"><p>Bytes in notes:</p>340 233</li>
-                <li id="totBytes"><p>Total bytes:</p>680 000</li>
-                <li id="leftBytes"><p>Total bytes:</p>680 000</li>
-            </ul>
-        </div>
-    </div>
+    <p id="persistBtn" class="centered">
+        <a class="btn btn-primary">
+            persist
+        </a>
+    </p>
+</div>

@@ -162,8 +162,7 @@ var CreateView = Backbone.View.extend({
                     var error = JSON.parse(response.responseText);
                     if (!_.isUndefined(error.desc))
                         $("#errorMsg").text(error.desc);
-                    if (error.error == 3)
-                        Recaptcha.reload();
+                    Recaptcha.reload();
                 } catch (e) {
                     $("#errorMsg").text("Error occured while save");
                 }
