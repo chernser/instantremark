@@ -14,7 +14,9 @@ config = {
       publicKey: "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7",
       privateKey: "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq"
     }
-  }
+  },
+
+  isProduction: false
 }
 
 app = express.createServer()
@@ -56,6 +58,7 @@ app.configure('production', () ->
   config.captcha.service.publicKey = "6LeZLM4SAAAAAH7JZKoA5EbfkjNUFbLhNjFf55cV"
   config.captcha.service.privateKey = "6LeZLM4SAAAAAD6l91xsRu1i4vr8pAJ7LFcfDRMC"
 
+  config.isProduction = true
 )
 
 app.configure('development', () ->
@@ -184,7 +187,7 @@ app.put('/remark', (req, res) ->
 assignShortLink = (remark, res) ->
   if (_.isUndefined(remark.shortLink))
     link = "http://" + config.server.domain
-    if (config.server.port != 80)
+    if (!config.isProduction)
       link += ":" + config.server.port
     link += "/#remark/" + remark._id
 

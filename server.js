@@ -14,7 +14,8 @@
         publicKey: "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7",
         privateKey: "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq"
       }
-    }
+    },
+    isProduction: false
   };
 
   app = express.createServer();
@@ -57,7 +58,8 @@
     LOG.info('Configuring for production');
     config.server.domain = "inremark.com";
     config.captcha.service.publicKey = "6LeZLM4SAAAAAH7JZKoA5EbfkjNUFbLhNjFf55cV";
-    return config.captcha.service.privateKey = "6LeZLM4SAAAAAD6l91xsRu1i4vr8pAJ7LFcfDRMC";
+    config.captcha.service.privateKey = "6LeZLM4SAAAAAD6l91xsRu1i4vr8pAJ7LFcfDRMC";
+    return config.isProduction = true;
   });
 
   app.configure('development', function() {
@@ -196,7 +198,7 @@
     var link;
     if (_.isUndefined(remark.shortLink)) {
       link = "http://" + config.server.domain;
-      if (config.server.port !== 80) link += ":" + config.server.port;
+      if (!config.isProduction) link += ":" + config.server.port;
       link += "/#remark/" + remark._id;
       console.log("requesting short link for: " + link);
       return urlshortener.makeShort(link, function(shortLink, err) {
