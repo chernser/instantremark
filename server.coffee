@@ -1,20 +1,33 @@
+
+
 express = require("express")
 
 config = {
   maxRemarkLen: 640000,
-  server:
-    {
+  server: {
       domain: "localhost",
       port: 4000
+  },
+
+  captcha: {
+    service: {
+      publicKey: "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7",
+      privateKey: "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq"
     }
+  }
 }
 
 app = express.createServer()
 urlshortener = require("./urlshortener")
 stylus = require("stylus")
 _ = require("underscore")
+logger = require("./logger")
+
+LOG = new logger.Logger("InstatRemark.server")
+
 
 publicPath = __dirname + '/public/'
+LOG.info("Public dir path: " + publicPath)
 
 app.configure(() ->
     app.set('view options', {layout: false, pretty: true})
@@ -33,10 +46,20 @@ app.configure(() ->
 )
 
 
+app.configure('production', () ->
+  LOG.info('Configuring for production')
+)
+
+app.configure('development', () ->
+  LOG.info('Configuring for development')
+
+)
+
 ## Here is main app logic
 mongo = require("mongodb")
 db = new mongo.Db("instantremark", new mongo.Server('localhost', 27017, {}), {})
 db.open(() ->
+  LOG.info('Connection with DB - OK')
 )
 
 
@@ -46,14 +69,10 @@ app.get('/', (req, res) ->
     res.render('index', {})
 )
 
-
-
-recaptchaPublicKey = "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7"
-recaptchaPrivateKey = "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq"
 Recaptcha = require("recaptcha").Recaptcha
 
 app.get('/captcha', (req, res) ->
-  res.send(recaptchaInst.toHTML())
+    res.send(recaptchaInst.toHTML())
 )
 
 ## REST Part of logic
@@ -64,15 +83,22 @@ app.get('/remark/:id', (req, res) ->
   try
     remarkId = new DbObjectID.createFromHexString(req.params.id)
   catch ex
+    LOG.warn('Failed to conver remark id: ' + req.params.id, 'get:remark')
     res.send(400)
     return
 
   db.collection("remark", (err, collection) ->
     collection.find({'_id' : remarkId }, (err, cursor) ->
+      if (err != null)
+        LOG.warn('Error occured while searching remark with id: ' + remarkId, 'get:remark')
+        res.send(500)
+        return
+
       cursor.nextObject((err, obj) ->
           if (obj != null)
             res.json(obj)
           else
+            LOG.warn('No remark with id ' + remarkId + ' was found', 'get:remark')
             res.send(404)
       )
     )
@@ -108,12 +134,11 @@ validateCaptcha = (req, callback) ->
     response:  req.body.recaptcha_response_field
   }
 
-  recaptcha = new Recaptcha(recaptchaPublicKey, recaptchaPrivateKey, data)
-
+  pubKey = config.captcha.service.publicKey
+  privKey = config.captcha.service.privateKey
+  recaptcha = new Recaptcha(pubKey, privKey, data)
 
   recaptcha.verify( callback)
-
-
 
 app.post('/remark/', (req, res) ->
   validateCaptcha(req, (success, error) ->
@@ -126,6 +151,7 @@ app.post('/remark/', (req, res) ->
       ## TODO: add validation here
       try
         validateRemark(remark)
+        console.log("remark is valid")
         db.collection("remark", (err, collection) ->
           collection.insert(remark, (err, objects) ->
               res.json(_.first(objects))
@@ -183,6 +209,7 @@ app.post('/remark/:id/shortlink', (req, res) ->
     )
 )
 
+LOG.info("Going to listen on port: " + config.server.port )
 app.listen(config.server.port)
 
 

@@ -1,5 +1,5 @@
 (function() {
-  var DbObjectID, Recaptcha, app, assignShortLink, config, db, express, isValidUrl, mongo, publicPath, recaptchaPrivateKey, recaptchaPublicKey, stylus, urlshortener, validateCaptcha, validateRemark, _;
+  var DbObjectID, LOG, Recaptcha, app, assignShortLink, config, db, express, isValidUrl, logger, mongo, publicPath, stylus, urlshortener, validateCaptcha, validateRemark, _;
 
   express = require("express");
 
@@ -8,6 +8,12 @@
     server: {
       domain: "localhost",
       port: 4000
+    },
+    captcha: {
+      service: {
+        publicKey: "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7",
+        privateKey: "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq"
+      }
     }
   };
 
@@ -19,7 +25,13 @@
 
   _ = require("underscore");
 
+  logger = require("./logger");
+
+  LOG = new logger.Logger("InstatRemark.server");
+
   publicPath = __dirname + '/public/';
+
+  LOG.info("Public dir path: " + publicPath);
 
   app.configure(function() {
     var stylusConf;
@@ -37,19 +49,25 @@
     return app.use(express.static(publicPath));
   });
 
+  app.configure('production', function() {
+    return LOG.info('Configuring for production');
+  });
+
+  app.configure('development', function() {
+    return LOG.info('Configuring for development');
+  });
+
   mongo = require("mongodb");
 
   db = new mongo.Db("instantremark", new mongo.Server('localhost', 27017, {}), {});
 
-  db.open(function() {});
+  db.open(function() {
+    return LOG.info('Connection with DB - OK');
+  });
 
   app.get('/', function(req, res) {
     return res.render('index', {});
   });
-
-  recaptchaPublicKey = "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7";
-
-  recaptchaPrivateKey = "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq";
 
   Recaptcha = require("recaptcha").Recaptcha;
 
@@ -64,6 +82,7 @@
     try {
       remarkId = new DbObjectID.createFromHexString(req.params.id);
     } catch (ex) {
+      LOG.warn('Failed to conver remark id: ' + req.params.id, 'get:remark');
       res.send(400);
       return;
     }
@@ -71,10 +90,16 @@
       return collection.find({
         '_id': remarkId
       }, function(err, cursor) {
+        if (err !== null) {
+          LOG.warn('Error occured while searching remark with id: ' + remarkId, 'get:remark');
+          res.send(500);
+          return;
+        }
         return cursor.nextObject(function(err, obj) {
           if (obj !== null) {
             return res.json(obj);
           } else {
+            LOG.warn('No remark with id ' + remarkId + ' was found', 'get:remark');
             return res.send(404);
           }
         });
@@ -108,13 +133,15 @@
   };
 
   validateCaptcha = function(req, callback) {
-    var data, recaptcha;
+    var data, privKey, pubKey, recaptcha;
     data = {
       remoteip: req.connection.remoteAddress,
       challenge: req.body.recaptcha_challenge_field,
       response: req.body.recaptcha_response_field
     };
-    recaptcha = new Recaptcha(recaptchaPublicKey, recaptchaPrivateKey, data);
+    pubKey = config.captcha.service.publicKey;
+    privKey = config.captcha.service.privateKey;
+    recaptcha = new Recaptcha(pubKey, privKey, data);
     return recaptcha.verify(callback);
   };
 
@@ -132,6 +159,7 @@
         remark = req.body;
         try {
           validateRemark(remark);
+          console.log("remark is valid");
           return db.collection("remark", function(err, collection) {
             return collection.insert(remark, function(err, objects) {
               return res.json(_.first(objects));
@@ -192,6 +220,8 @@
       });
     });
   });
+
+  LOG.info("Going to listen on port: " + config.server.port);
 
   app.listen(config.server.port);
 
