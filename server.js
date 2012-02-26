@@ -1,5 +1,5 @@
 (function() {
-  var DbObjectID, LOG, Recaptcha, app, assignShortLink, config, db, express, isValidUrl, logger, mongo, publicPath, stylus, urlshortener, validateCaptcha, validateRemark, _;
+  var DbObjectID, LOG, Recaptcha, app, assignShortLink, config, db, express, isValidUrl, jade, logger, mongo, publicPath, stylus, urlshortener, util, validateCaptcha, validateRemark, _;
 
   express = require("express");
 
@@ -23,7 +23,11 @@
 
   stylus = require("stylus");
 
+  jade = require("jade");
+
   _ = require("underscore");
+
+  util = require("util");
 
   logger = require("./logger");
 
@@ -39,7 +43,7 @@
       layout: false,
       pretty: true
     });
-    app.set('view engine', 'html');
+    app.set('view engine', 'jade');
     app.use(express.bodyParser());
     stylusConf = {
       src: __dirname + '/stylus/',
@@ -50,7 +54,10 @@
   });
 
   app.configure('production', function() {
-    return LOG.info('Configuring for production');
+    LOG.info('Configuring for production');
+    config.server.domain = "inremark.com";
+    config.captcha.service.publicKey = "6LeZLM4SAAAAAH7JZKoA5EbfkjNUFbLhNjFf55cV";
+    return config.captcha.service.privateKey = "6LeZLM4SAAAAAD6l91xsRu1i4vr8pAJ7LFcfDRMC";
   });
 
   app.configure('development', function() {
@@ -71,8 +78,13 @@
 
   Recaptcha = require("recaptcha").Recaptcha;
 
-  app.get('/captcha', function(req, res) {
-    return res.send(recaptchaInst.toHTML());
+  app.get('/captcha.js', function(req, res) {
+    var html, publicKey;
+    publicKey = config.captcha.service.publicKey;
+    html = util.format("var RecaptchaPublicKey = \"%s\";", publicKey);
+    return res.send(html, {
+      'Content-Type': 'text/javascript'
+    });
   });
 
   DbObjectID = mongo.ObjectID;

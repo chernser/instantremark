@@ -20,7 +20,9 @@ config = {
 app = express.createServer()
 urlshortener = require("./urlshortener")
 stylus = require("stylus")
+jade = require("jade")
 _ = require("underscore")
+util = require("util")
 logger = require("./logger")
 
 LOG = new logger.Logger("InstatRemark.server")
@@ -31,7 +33,7 @@ LOG.info("Public dir path: " + publicPath)
 
 app.configure(() ->
     app.set('view options', {layout: false, pretty: true})
-    app.set('view engine', 'html')
+    app.set('view engine', 'jade')
     app.use(express.bodyParser());
 
     stylusConf = {
@@ -48,11 +50,21 @@ app.configure(() ->
 
 app.configure('production', () ->
   LOG.info('Configuring for production')
+
+  config.server.domain = "inremark.com"
+
+  config.captcha.service.publicKey = "6LeZLM4SAAAAAH7JZKoA5EbfkjNUFbLhNjFf55cV"
+  config.captcha.service.privateKey = "6LeZLM4SAAAAAD6l91xsRu1i4vr8pAJ7LFcfDRMC"
+
 )
 
 app.configure('development', () ->
   LOG.info('Configuring for development')
 
+    config.server.domain = "localhost"
+
+    config.captcha.service.publicKey = "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7"
+    config.captcha.service.privateKey = "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq"
 )
 
 ## Here is main app logic
@@ -71,8 +83,10 @@ app.get('/', (req, res) ->
 
 Recaptcha = require("recaptcha").Recaptcha
 
-app.get('/captcha', (req, res) ->
-    res.send(recaptchaInst.toHTML())
+app.get('/captcha.js', (req, res) ->
+    publicKey =  config.captcha.service.publicKey
+    html = util.format("var RecaptchaPublicKey = \"%s\";", publicKey)
+    res.send(html,  { 'Content-Type': 'text/javascript' })
 )
 
 ## REST Part of logic

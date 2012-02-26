@@ -39,8 +39,8 @@ var CreateView = Backbone.View.extend({
 
             $(that.el).find("#note").val(that.model.get("note"));
 
-            require(["http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"], function(module) {
-                Recaptcha.create("6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7", "captcha", {
+            require(["/captcha.js", "http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"], function(module) {
+                Recaptcha.create(RecaptchaPublicKey, "captcha", {
                     callback: function() {}
                 });
             });
