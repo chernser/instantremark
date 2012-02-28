@@ -2,13 +2,62 @@
 input:focus::-webkit-input-placeholder {
   color: transparent;
 }
-.header-bar {
+body {
+  background-image: url("/img/bg03.png");
+}
+input {
+  border: none;
+  font: 20px 'Curier';
+  padding: 5px;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+}
+#_main {
+  background-image: url("/img/bg02.png");
+  margin-top: 40px;
+  padding: 30px 30px 10px 30px;
+}
+#logo {
+  text-shadow: 0px 1px 4px #872353;
+}
+#logo * {
+  color: #105;
+  display: inline;
+  font-weight: 900;
+}
+#logo small {
+  font: 20px 'Curier';
+  font-weight: 500;
+}
+#header-bar {
   position: fixed;
   display: block;
   z-index: 1200;
-  background-color: #fff;
   width: 100%;
-  padding-top: 5px;
+  background-image: url("/img/bg01.png");
+  padding: 5px 0 5px 0;
+  box-shadow: 0px 2px 5px #000;
+}
+.header-bar-btn {
+  height: 100px;
+  padding: 100px 10px 10px 10px;
+  background-color: #000;
+  box-shadow: 0px -2px 3px #872353;
+}
+.header-bar-btn * {
+  white-space: nowrap;
+}
+.header-bar-btn:hover {
+  background-color: #808080;
+}
+.header-bar-btn:hover a {
+  color: #fff;
+}
+.header-bar-btn a {
+  color: #fff;
+  font: 20px 'Curier';
+  text-decoration: none;
+  font-style: italic;
 }
 .header-bottom-shadow {
   width: 100%;
@@ -27,7 +76,11 @@ input:focus::-webkit-input-placeholder {
   display: inline;
 }
 .big-font {
-  font-size: 16pt;
+  font-size: 16px;
+}
+.small-button {
+  display: inline-block;
+  height: 15px;
 }
 .action-link:hover {
   text-decoration: none;
@@ -41,28 +94,47 @@ input:focus::-webkit-input-placeholder {
 }
 #links {
   font-size: 12pt;
-  list-style: lower-alpha;
+  list-style: none;
   color: #aaa;
 }
+#links li {
+  color: #000;
+  font: 'Curier';
+  margin-bottom: 10px;
+}
 #links li a {
-  font-size: 14pt;
+  font-size: 20px;
+  color: #ddd;
 }
-@media (min-width: 480px) {
-  #links li input {
-    width: 97%;
-  }
+#links li a:hover {
+  color: #fff;
+  font-size: 24px;
 }
-@media (max-width: 480px) {
-  #links li input {
-    width: 360px;
-  }
+#links li input {
+  width: 100%;
+  margin-bottom: 5px;
 }
-#note {
-  font-size: 14pt;
-  font-family: sans-serif;
+.note {
+  font: 18px 'Curier';
+  margin-bottom: 10px;
+}
+textarea.note {
+  width: 100%;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+}
+p.note {
+  padding: 10px;
+  background-image: url("/img/bg03.png");
+}
+#letters-left {
+  font: 14px 'Ariel';
+  padding: 0;
 }
 #selfLink {
   padding: 3px;
+  height: 27px;
+  margin: 0;
 }
 .btn-small {
   margin-bottom: 9px;
