@@ -16,6 +16,7 @@ require(
     'order!lib/backbone',
     'order!lib/backbone.marionette',
     'order!lib/bootstrap',
+    'order!lib/clientlogger',
     'order!app/application'
 ],
     function () {

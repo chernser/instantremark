@@ -2,6 +2,8 @@
 // Namespace object
 var InstantRemark = {};
 
+var Log = new $logger.Logger("InstantRemark");
+
 require([
     'domReady',
     'order!app/templates',
@@ -13,6 +15,8 @@ require([
 
 ], function() {
 
+    Log.trace("Starting application", "entrypoint.start");
+
     InstantRemark.app = new Backbone.Marionette.Application();
 
     InstantRemark.app.addRegions({
@@ -20,13 +24,8 @@ require([
     });
 
     // Bind our router
+    Log.trace("Binding Router", "entrypoint.router.bind");
     InstantRemark.router = new AppRouter();
     Backbone.history.start();
-
-    var link =  "http://www.google.com/recaptcha/api/challenge?k=6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7";
-
-    //document.write("<script src='" + link + "'><\/script>");
-
-    //$("#loadedScript").attr("src", link);
 });
 
