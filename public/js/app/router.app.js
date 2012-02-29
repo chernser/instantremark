@@ -3,7 +3,8 @@ var AppRouter = Backbone.Router.extend({
     routes : {
 
         'remark/new' : 'createNewRemark',
-        'remark/:id' : 'showRemark'
+        'remark/:id' : 'showRemark',
+        ':id' : 'showRemark'
     },
 
 
@@ -20,6 +21,8 @@ var AppRouter = Backbone.Router.extend({
 
     showRemark : function(id) {
         debug("show remark with id: " + id + " at " + new Date());
+        if (id == '')
+        return
         InstantRemark.model = new RemarkModel({_id: id});
         InstantRemark.model.fetch({
             success: function(model, response) {

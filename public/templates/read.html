@@ -1,19 +1,22 @@
 <div class="span7">
     <fieldset style="padding-bottom: 20px">
-        <input id="selfLink" value="">
+        <input id="selfLink" value="{{selfLink}}">
         <a id="shortLinkBtn" class="button">I want shorter link</a>
         <a id="qrCodeBtn" class="button small-button">I want QR code</a>
     </fieldset>
 
     <h3>Links</h3>
     <ul id="links">
+        {{#each links}}
+            <li><a href="{{this.link}}">{{this.desc}}</a></li>
+        {{/each}}
     </ul>
 
+    {{#if note}}
     <br>
-
     <h3>Note</h3>
-
-    <p id="note" class="note"></p>
+    <p id="note" class="note">{{note}}</p>
+    {{/if}}
 
     <div id="qrCodeCanvas"></div>
 </div>

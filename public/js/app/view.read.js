@@ -15,20 +15,23 @@ var ReadView = Backbone.View.extend({
 
         Backbone.Marionette.TemplateManager.get('read', function (tmpl) {
 
-            var html = _.template(tmpl);
+            var template = Handlebars.compile(tmpl);
+            var context = {
+                links: that.model.get("links"),
+                note: that.model.get("note"),
+                selfLink: window.location
+            };
+            for (var i = 0; i < context.links.length; ++i)
+                if (context.links[i].desc == "")
+                    context.links[i].desc = "Link #" + (i + 1);
 
-            $(that.el).html(tmpl);
+            if (context.note == '')
+                context.note = false;
+            debug(context);
+            var html = template(context);
 
-            var linksEl = $(that.el).find("#links");
+            $(that.el).html(html);
 
-            _.each(that.model.get("links"), function(link, index) {
-                var desc = _.isEmpty(link.desc) ? 'Link #' + index : link.desc;
-                $('<li><a href="' + link.link +'" >' + desc + '</a></li>').
-                    appendTo(linksEl);
-            });
-
-            $(that.el).find("#note").text(that.model.get("note"));
-            $(that.el).find("#selfLink").val(window.location);
 
             deferedObj.resolve();
         });

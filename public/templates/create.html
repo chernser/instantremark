@@ -1,6 +1,12 @@
 <h3>Links</h3>
 
 <ul id="links">
+    {{#each links}}
+    <li id="{{this.index}}">
+        <input rel="link" value="{{this.link}}" placeholder="Url #{{this.index}}" />
+        <input rel="desc" value="{{this.desc}}" placeholder="Description"/>
+    </li>
+    {{/each}}
 </ul>
 
 <p id="addLinks" class="centered">
@@ -11,11 +17,8 @@
 
 
 <h3>Note</h3>
-<textarea id="note" class="note" rows="10" cols="80"></textarea>
+<textarea id="note" class="note" rows="10" cols="80" value="{{note}}"></textarea>
 <p id="letters-left" class="centered" >640000 chars left</p>
-
-
-<div class="centered" id="captcha"></div>
 
 <p id="errorMsg"></p>
 
