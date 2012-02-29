@@ -1,5 +1,5 @@
 (function() {
-  var DbObjectID, LOG, Recaptcha, app, assignShortLink, config, db, express, isValidUrl, jade, logger, mongo, publicPath, stylus, urlshortener, util, validateCaptcha, validateRemark, _;
+  var DbObjectID, LOG, app, assignShortLink, config, createRemark, createShortAlias, db, express, getRemark, getRemarkById, getRemarkByShortAlias, isValidUrl, jade, logger, mongo, publicPath, stylus, urlshortener, util, validateRemark, _;
 
   express = require("express");
 
@@ -8,12 +8,6 @@
     server: {
       domain: "localhost",
       port: 4000
-    },
-    captcha: {
-      service: {
-        publicKey: "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7",
-        privateKey: "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq"
-      }
     },
     isProduction: false
   };
@@ -57,16 +51,12 @@
   app.configure('production', function() {
     LOG.info('Configuring for production');
     config.server.domain = "inremark.com";
-    config.captcha.service.publicKey = "6LeZLM4SAAAAAH7JZKoA5EbfkjNUFbLhNjFf55cV";
-    config.captcha.service.privateKey = "6LeZLM4SAAAAAD6l91xsRu1i4vr8pAJ7LFcfDRMC";
     return config.isProduction = true;
   });
 
   app.configure('development', function() {
     LOG.info('Configuring for development');
-    config.server.domain = "localhost";
-    config.captcha.service.publicKey = "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7";
-    return config.captcha.service.privateKey = "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq";
+    return config.server.domain = "localhost";
   });
 
   mongo = require("mongodb");
@@ -74,41 +64,28 @@
   db = new mongo.Db("instantremark", new mongo.Server('localhost', 27017, {}), {});
 
   db.open(function() {
-    return LOG.info('Connection with DB - OK');
+    LOG.info('Connection with DB - OK');
+    return db.collection('sequences', function(err, collection) {
+      return collection.insert({
+        _id: 'remarkSeqNumber',
+        value: 1
+      });
+    });
   });
 
   app.get('/', function(req, res) {
     return res.render('index', {});
   });
 
-  Recaptcha = require("recaptcha").Recaptcha;
-
-  app.get('/captcha.js', function(req, res) {
-    var html, publicKey;
-    publicKey = config.captcha.service.publicKey;
-    html = util.format("var RecaptchaPublicKey = \"%s\";", publicKey);
-    return res.send(html, {
-      'Content-Type': 'text/javascript'
-    });
-  });
-
   DbObjectID = mongo.ObjectID;
 
-  app.get('/remark/:id', function(req, res) {
-    var remarkId;
-    try {
-      remarkId = new DbObjectID.createFromHexString(req.params.id);
-    } catch (ex) {
-      LOG.warn('Failed to conver remark id: ' + req.params.id, 'get:remark');
-      res.send(400);
-      return;
-    }
+  getRemarkByShortAlias = function(shortAlias, res) {
     return db.collection("remark", function(err, collection) {
       return collection.find({
-        '_id': remarkId
+        'shortAlias': shortAlias
       }, function(err, cursor) {
         if (err !== null) {
-          LOG.warn('Error occured while searching remark with id: ' + remarkId, 'get:remark');
+          LOG.warn('Error occured while searching remark with shortAlias: ' + shortAlias, 'getByShortAlias:remark');
           res.send(500);
           return;
         }
@@ -116,13 +93,50 @@
           if (obj !== null) {
             return res.json(obj);
           } else {
-            LOG.warn('No remark with id ' + remarkId + ' was found', 'get:remark');
+            LOG.warn('No remark with shortAlias ' + shortAlias + ' was found', 'getByShortAlias:remark');
             return res.send(404);
           }
         });
       });
     });
-  });
+  };
+
+  getRemarkById = function(remarkId, res) {
+    return db.collection("remark", function(err, collection) {
+      return collection.find({
+        '_id': remarkId
+      }, function(err, cursor) {
+        if (err !== null) {
+          LOG.warn('Error occured while searching remark with id: ' + remarkId, 'getById:remark');
+          res.send(500);
+          return;
+        }
+        return cursor.nextObject(function(err, obj) {
+          if (obj !== null) {
+            return res.json(obj);
+          } else {
+            LOG.warn('No remark with id ' + remarkId + ' was found', 'getById:remark');
+            return res.send(404);
+          }
+        });
+      });
+    });
+  };
+
+  getRemark = function(req, res) {
+    var remarkId;
+    try {
+      remarkId = new DbObjectID.createFromHexString(req.params.id);
+      return getRemarkById(remarkId, res);
+    } catch (ex) {
+      LOG.warn('Failed to conver remark id: ' + req.params.id, 'get:remark');
+      return getRemarkByShortAlias(req.params.id, res);
+    }
+  };
+
+  app.get('/remark/:id', getRemark);
+
+  app.get('/:id', getRemark);
 
   isValidUrl = function(url) {
     return /^([a-z]([a-z]|\d|\+|-|\.)*):(\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?((\[(|(v[\da-f]{1,}\.(([a-z]|\d|-|\.|_|~)|[!\$&'\(\)\*\+,;=]|:)+))\])|((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=])*)(:\d*)?)(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*|(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)|((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)|((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)){0})(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.test(url);
@@ -152,45 +166,68 @@
     }
   };
 
-  validateCaptcha = function(req, callback) {
-    var data, privKey, pubKey, recaptcha;
-    data = {
-      remoteip: req.connection.remoteAddress,
-      challenge: req.body.recaptcha_challenge_field,
-      response: req.body.recaptcha_response_field
-    };
-    pubKey = config.captcha.service.publicKey;
-    privKey = config.captcha.service.privateKey;
-    recaptcha = new Recaptcha(pubKey, privKey, data);
-    return recaptcha.verify(callback);
+  createShortAlias = function(remark, res) {
+    return db.collection("sequences", function(err, collection) {
+      return collection.findAndModify({
+        _id: 'remarkSeqNumber'
+      }, [], {
+        '$inc': {
+          value: 1
+        }
+      }, {}, function(err, value) {
+        var shortAlias;
+        if (_.isUndefined(err) || err === null) {
+          shortAlias = new Number(value.value).toString(36);
+          return db.collection("remark", function(err, collection) {
+            return collection.update({
+              _id: remark._id
+            }, {
+              '$set': {
+                shortAlias: shortAlias
+              }
+            }, function(err, objects) {
+              if (_.isUndefined(err) || err === null) {
+                LOG.info("Short alias is: " + shortAlias);
+                remark.shortAlias = shortAlias;
+              } else {
+                console.log(err);
+                LOG.error("Failed to set remark's short alias");
+              }
+              return res.json(remark);
+            });
+          });
+        } else {
+          return LOG.error("Failed to create short alias");
+        }
+      });
+    });
+  };
+
+  createRemark = function(remark, res) {
+    return db.collection("remark", function(err, collection) {
+      return collection.insert(remark, function(err, objects) {
+        var newRemark;
+        newRemark = _.first(objects);
+        return createShortAlias(newRemark, res);
+      });
+    });
   };
 
   app.post('/remark/', function(req, res) {
-    return validateCaptcha(req, function(success, error) {
-      var remark;
-      if (!success) {
-        res.send({
-          error: 3,
-          desc: "Invalid captcha. Try again, please"
-        }, 400);
-        return;
+    var remark;
+    if (req.is('*/json')) {
+      remark = req.body;
+      remark = {
+        links: remark.links,
+        note: remark.note
+      };
+      try {
+        validateRemark(remark);
+        return createRemark(remark, res);
+      } catch (e) {
+        return res.send(e, 400);
       }
-      if (req.is('*/json')) {
-        remark = req.body;
-        try {
-          validateRemark(remark);
-          console.log("remark is valid");
-          return db.collection("remark", function(err, collection) {
-            return collection.insert(remark, function(err, objects) {
-              return res.json(_.first(objects));
-            });
-          });
-        } catch (e) {
-          console.log(e);
-          return res.send(e, 400);
-        }
-      }
-    });
+    }
   });
 
   app.put('/remark', function(req, res) {
@@ -203,10 +240,8 @@
       link = "http://" + config.server.domain;
       if (!config.isProduction) link += ":" + config.server.port;
       link += "/#remark/" + remark._id;
-      console.log("requesting short link for: " + link);
       return urlshortener.makeShort(link, function(shortLink, err) {
         if (shortLink !== null) {
-          console.log(shortLink);
           remark.shortLink = shortLink;
           res.send(remark);
           db.collection("remark", function(err, collection) {
@@ -214,7 +249,6 @@
           });
           return;
         }
-        console.log("error occure");
         if (err !== null) return console.log(err);
       });
     } else {
