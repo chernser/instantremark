@@ -1,6 +1,7 @@
 
 /**
  * Use dynamic template loading
+ *
  */
 Backbone.Marionette.TemplateManager.loadTemplate = function(templateId, callback){
     var that = this;

@@ -2,3 +2,5 @@ node_modules
 lib
 !public/js/lib
 .idea
+.DS_Store
+

@@ -131,8 +131,11 @@
   validateRemark = function(remark) {
     var bytes;
     bytes = 0;
-    if (!_.isUndefined(remark.link)) {
-      _.each(remark.links, function(link, index) {});
+    if (!_.isUndefined(remark.links)) {
+      _.each(remark.links, function(link, index) {
+        if (!_.isUndefined(link.link)) bytes += link.link.length;
+        if (!_.isUndefined(link.desc)) return bytes += link.desc.length;
+      });
     }
     if (!_.isUndefined(remark.note)) bytes += remark.note.length;
     if (bytes > config.maxRemarkLen) {

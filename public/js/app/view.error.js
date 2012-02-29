@@ -45,11 +45,10 @@ var ErrorView = Backbone.View.extend({
 
         Backbone.Marionette.TemplateManager.get('error', function (tmpl) {
 
-            var html = _.template(tmpl);
+            var template = Handlebars.compile(tmpl);
+            var html = template({errorMessage: that.errorMessage});
 
-            $(that.el).html(html({
-                errorMessage: that.errorMessage
-            }));
+            $(that.el).html(html);
             deferedObj.resolve();
         });
 

@@ -130,10 +130,15 @@ isValidUrl = (url) ->
 validateRemark = (remark) ->
   bytes = 0
 
-  if (!_.isUndefined(remark.link))
+  if (!_.isUndefined(remark.links))
     _.each(remark.links, (link, index) ->
+      if (!_.isUndefined(link.link))
+          bytes += link.link.length
 
+      if (!_.isUndefined(link.desc))
+          bytes += link.desc.length
     )
+
 
   if (!_.isUndefined(remark.note))
     bytes += remark.note.length;

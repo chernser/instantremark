@@ -18,27 +18,38 @@ var CreateView = Backbone.View.extend({
         var deferedObj = $.Deferred();
 
         Backbone.Marionette.TemplateManager.get('create', function (tmpl) {
-            var html = _.template(tmpl);
 
-            $(that.el).html(tmpl);
 
-            var linksEl = $(that.el).find("#links");
+            var template = Handlebars.compile(tmpl);
 
-            var alphas = getNAlphas('a', that.numberOfLinks);
-            for (var i = 0; i < that.numberOfLinks; ++i) {
-                $('<li id="' + alphas[i] + 'Link"><input rel="link" value="" placeholder="URL ' + alphas[i] + '">'+
-                  '<input rel="desc" value="" placeholder="Short decsription of URL ' + alphas[i] + '"></li>')
-                    .appendTo(linksEl);
+
+            var links = that.model.get("links");
+            console.log(links);
+            if (links != null) {
+                debug("generating links");
+            } else {
+                links = new Array();
+            }
+
+            function EmptyLink(index) {
+              return {link:"", desc: "", index: index};
+            };
+
+            for (var i = 1; i <= that.numberOfLinks; ++i) {
+
+                if (i <= links.length)
+                    links[i - 1].index = i;
+                else
+                    links.push(new EmptyLink(i));
             }
 
 
-            _.each(that.model.get("links"), function(link, index) {
-                $("#" + alphas[index] + "Link > input[rel=\"link\"]").val(link.link);
-                $("#" + alphas[index] + "Link > input[rel=\"desc\"]").val(link.desc);
-            });
+            context = { links: links, note: that.model.get("note")};
+            var html = template(context);
 
-            $(that.el).find("#note").val(that.model.get("note"));
+            $(that.el).html(html);
 
+            // TODO: cache it!
             require(["/captcha.js", "http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"], function(module) {
                 Recaptcha.create(RecaptchaPublicKey, "captcha", {
                     callback: function() {}
