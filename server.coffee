@@ -96,6 +96,13 @@ app.get('/captcha.js', (req, res) ->
 
 DbObjectID = mongo.ObjectID;
 
+
+app.get("/:id", (req, res) ->
+  res.send("<h1>Hello</h1>");
+)
+
+
+
 app.get('/remark/:id', (req, res) ->
   try
     remarkId = new DbObjectID.createFromHexString(req.params.id)
@@ -132,7 +139,10 @@ validateRemark = (remark) ->
 
   if (!_.isUndefined(remark.link))
     _.each(remark.links, (link, index) ->
-
+        if (!_.isUndefined(link.link))
+          bytes += link.link.length
+        if (!_.isUndefined(link.desc))
+          bytes += link.desc.length
     )
 
   if (!_.isUndefined(remark.note))
