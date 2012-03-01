@@ -16,7 +16,7 @@ require(
     'order!lib/backbone',
     'order!lib/backbone.marionette',
     'order!lib/bootstrap',
-    'order!lib/clientlogger',
+    'order!lib/pinkerton.agent',
     'order!app/application'
 ],
     function () {
