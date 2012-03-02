@@ -77,6 +77,14 @@ app.get('/', (req, res) ->
     res.render('index', {})
 )
 
+app.post('/logger', (req, res) ->
+  if req.is('*/json') || req.is('application/x-www-form-urlencoded')
+    res.send(200)
+    logger.Logger.emitCustomLogMessage(req.body)
+  else
+    res.send(400)
+)
+
 
 ## REST Part of logic
 
@@ -245,6 +253,8 @@ app.post('/remark/:id/shortlink', (req, res) ->
     )
 )
 
+
+# TODO: should wait until complete initializaion
 LOG.info("Going to listen on port: " + config.server.port )
 app.listen(config.server.port)
 

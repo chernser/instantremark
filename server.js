@@ -77,6 +77,15 @@
     return res.render('index', {});
   });
 
+  app.post('/logger', function(req, res) {
+    if (req.is('*/json') || req.is('application/x-www-form-urlencoded')) {
+      res.send(200);
+      return logger.Logger.emitCustomLogMessage(req.body);
+    } else {
+      return res.send(400);
+    }
+  });
+
   DbObjectID = mongo.ObjectID;
 
   getRemarkByShortAlias = function(shortAlias, res) {

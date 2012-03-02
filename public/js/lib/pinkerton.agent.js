@@ -101,10 +101,14 @@ Pinkerton.ConsoleAppender.format = "%S> %t %l: [%L:%p]: %m";
 Pinkerton.HttpServerAppender = function(logMessage) {
     var config = Pinkerton.HttpServerAppender.config;
 
+    var isJSON = Pinkerton.HttpServerAppender.config.isJSON;
     // TODO: check if jQuery is loaded
     $.ajax({
         type: 'POST',
         url: config.url,
+        data: isJSON ? JSON.stringify(logMessage) : logMessage,
+        cache: false,
+        contentType: isJSON ? 'application/json' : 'application/x-www-form-urlencoded',
         error: function() {
             Pinkerton.ConsoleAppender("Failed to POST to " + config.url);
         }
@@ -112,7 +116,8 @@ Pinkerton.HttpServerAppender = function(logMessage) {
 };
 
 Pinkerton.HttpServerAppender.config = {
-    url: '/logger/'
+    url: '/logger/',
+    isJSON: true
 };
 
 
