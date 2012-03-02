@@ -6,11 +6,16 @@
 
 utils = require("util");
 _ = require('underscore');
+events = require('events');
 
-
-module.exports.Logger = function Logger(name) {
+/**
+ * Class representing standard logger instance
+ *
+ * @param name
+ */
+exports.Logger = function Logger(name) {
     this.name = name;
-    this.logger = new require("winston");
+
 
     this.prototype = Logger.prototype;
 
@@ -19,30 +24,49 @@ module.exports.Logger = function Logger(name) {
 
 var Logger = module.exports.Logger;
 
-Logger.prototype.getPointAddress = function(point, requestId) {
-    if (_.isUndefined(point))
-        return "";
-    if (_.isUndefined(requestId))
-        return '{' + point + '}';
-    return '{' + requestId + ':' + point + '}';
+// Event processing
+Logger.eventEmitter = new events.EventEmitter();
+
+Logger.eventEmitter.on('logmessage', function(logMessage) {
+    console.log(logMessage);
+
+});
+
+Logger.emitLogMessage = function(logger, level, message, point, requestId) {
+    var logMessage = {
+        time: new Date().toGMTString(),
+        logger: logger.name,
+        level: level,
+        message: message,
+        point: typeof point != 'undefined' ? point : null,
+        requestId: typeof requestId != 'undefined' ? requestId : null
+    };
+
+    Logger.eventEmitter.emit('logmessage', logMessage);
 }
 
+/**
+ * Logger methods
+ */
 Logger.prototype.debug = function(message, point, requestId) {
-    var pointAddress = this.getPointAddress(point, requestId);
-    this.logger.log('debug', utils.format("%s [%s]: %s",pointAddress, this.name, message) );
+    Logger.emitLogMessage(this, 'debug', message, point, requestId);
 };
 
 Logger.prototype.info = function(message, point, requestId) {
-    var pointAddress = this.getPointAddress(point, requestId);
-    this.logger.log('info', utils.format("%s [%s]: %s",pointAddress, this.name, message) );
+    Logger.emitLogMessage(this, 'info', message, point, requestId);
 };
 
 Logger.prototype.warn = function(message, point, requestId) {
-    var pointAddress = this.getPointAddress(point, requestId);
-    this.logger.log('warn', utils.format("%s [%s]: %s",pointAddress, this.name, message) );
+    Logger.emitLogMessage(this, 'warn', message, point, requestId);
 };
 
 Logger.prototype.error = function(message, point, requestId) {
-    var pointAddress = this.getPointAddress(point, requestId);
-    this.logger.log('error', utils.format("%s [%s]: %s",pointAddress, this.name, message) );
+    Logger.emitLogMessage(this, 'error', message, point, requestId);
 };
+
+
+
+
+
+
+

@@ -11,6 +11,45 @@ input
     -moz-border-radius: 4px;
     -webkit-border-radius: 4px;
 
+a.header-bar-btn
+    height: 99px
+    padding: 100px 10px 10px 10px;
+    background-color: black
+    box-shadow: 0px -2px 3px #872353
+    margin-left: 10px
+    color: #fff
+    font: 20px 'Curier'
+    text-decoration: none
+    font-style: italic
+
+    &:hover
+        background-color: #222
+        color: #fff
+        box-shadow: 0px 0px 12px #000
+
+.header-bottom-shadow
+    width: 100%
+    position: fixed
+    display: block
+    z-index: 1100
+    left: 0
+    height: 50px
+    box-shadow: 0px 0px 25px #000
+
+.inline-el
+    display: inline;
+
+.big-font
+    font-size: 16px
+
+.small-button
+    display: inline-block
+    height: 15px
+
+.centered
+    text-align: center
+
+
 
 #_main
     background-image: url('/img/bg02.png')
@@ -39,64 +78,6 @@ input
     padding: 5px 0 5px 0
     box-shadow: 0px 2px 5px #000
 
-.header-bar-btn
-    height: 100px
-    padding: 100px 10px 10px 10px;
-    background-color: black
-    box-shadow: 0px -2px 3px #872353
-    margin-left: 10px
-
-    *
-        white-space: nowrap
-    &:hover
-        background-color: gray
-        & a
-            color: #fff
-    a
-        color: #fff
-        font: 20px 'Curier'
-        text-decoration: none
-        font-style: italic
-
-
-
-.header-bottom-shadow
-    width: 100%
-    position: fixed
-    display: block
-    z-index: 1100
-    left: 0
-    height: 50px
-    box-shadow: 0px 0px 25px #000
-
-
-.main-content
-    position: relative
-    top: 70px
-
-.inline-el
-    display: inline;
-
-.big-font
-    font-size: 16px
-
-.small-button
-    display: inline-block
-    height: 15px
-
-
-
-.action-link
-    &:hover
-        text-decoration: none
-
-.centered
-    text-align: center
-
-.hseparator-10
-    display: inline-block
-    width: 10px
-
 
 #links
     font-size: 12pt
@@ -116,13 +97,8 @@ input
             width: 100%
             margin-bottom: 5px
 
-
-
-
-
 .note
     font: 18px 'Curier'
-
     margin-bottom: 10px
 
 textarea.note
