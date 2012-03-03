@@ -9,13 +9,6 @@ config = {
       port: 4000
   },
 
-  captcha: {
-    service: {
-      publicKey: "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7",
-      privateKey: "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq"
-    }
-  },
-
   isProduction: false
 }
 
@@ -55,9 +48,6 @@ app.configure('production', () ->
 
   config.server.domain = "inremark.com"
 
-  config.captcha.service.publicKey = "6LeZLM4SAAAAAH7JZKoA5EbfkjNUFbLhNjFf55cV"
-  config.captcha.service.privateKey = "6LeZLM4SAAAAAD6l91xsRu1i4vr8pAJ7LFcfDRMC"
-
   config.isProduction = true
 )
 
@@ -65,9 +55,6 @@ app.configure('development', () ->
   LOG.info('Configuring for development')
 
   config.server.domain = "localhost"
-
-  config.captcha.service.publicKey = "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7"
-  config.captcha.service.privateKey = "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq"
 )
 
 ## Here is main app logic
@@ -75,7 +62,13 @@ mongo = require("mongodb")
 db = new mongo.Db("instantremark", new mongo.Server('localhost', 27017, {}), {})
 db.open(() ->
   LOG.info('Connection with DB - OK')
+  db.collection('sequences', (err, collection) ->
+    # init remark sequence counter
+    collection.insert({_id: 'remarkSeqNumber', value: 1});
+  )
 )
+
+
 
 
 ## Presentation logic
@@ -84,44 +77,59 @@ app.get('/', (req, res) ->
     res.render('index', {})
 )
 
-Recaptcha = require("recaptcha").Recaptcha
-
-app.get('/captcha.js', (req, res) ->
-    publicKey =  config.captcha.service.publicKey
-    html = util.format("var RecaptchaPublicKey = \"%s\";", publicKey)
-    res.send(html,  { 'Content-Type': 'text/javascript' })
-)
 
 ## REST Part of logic
 
 DbObjectID = mongo.ObjectID;
 
-app.get('/remark/:id', (req, res) ->
+getRemarkByShortAlias = (shortAlias, res) ->
+  db.collection("remark", (err, collection) ->
+      collection.find({'shortAlias' : shortAlias }, (err, cursor) ->
+          if (err != null)
+            LOG.warn('Error occured while searching remark with shortAlias: ' + shortAlias, 'getByShortAlias:remark')
+            res.send(500)
+            return
+
+          cursor.nextObject((err, obj) ->
+              if (obj != null)
+                res.json(obj)
+              else
+                LOG.warn('No remark with shortAlias ' + shortAlias + ' was found', 'getByShortAlias:remark')
+                res.send(404)
+          )
+      )
+  )
+
+getRemarkById = (remarkId, res) ->
+  db.collection("remark", (err, collection) ->
+      collection.find({'_id' : remarkId }, (err, cursor) ->
+          if (err != null)
+            LOG.warn('Error occured while searching remark with id: ' + remarkId, 'getById:remark')
+            res.send(500)
+            return
+
+          cursor.nextObject((err, obj) ->
+              if (obj != null)
+                res.json(obj)
+              else
+                LOG.warn('No remark with id ' + remarkId + ' was found', 'getById:remark')
+                res.send(404)
+          )
+      )
+  )
+
+getRemark = (req, res) ->
   try
     remarkId = new DbObjectID.createFromHexString(req.params.id)
+    getRemarkById(remarkId, res)
   catch ex
     LOG.warn('Failed to conver remark id: ' + req.params.id, 'get:remark')
-    res.send(400)
-    return
+    getRemarkByShortAlias(req.params.id, res)
 
-  db.collection("remark", (err, collection) ->
-    collection.find({'_id' : remarkId }, (err, cursor) ->
-      if (err != null)
-        LOG.warn('Error occured while searching remark with id: ' + remarkId, 'get:remark')
-        res.send(500)
-        return
 
-      cursor.nextObject((err, obj) ->
-          if (obj != null)
-            res.json(obj)
-          else
-            LOG.warn('No remark with id ' + remarkId + ' was found', 'get:remark')
-            res.send(404)
-      )
-    )
-  )
-)
+app.get('/remark/:id', getRemark)
 
+app.get('/:id', getRemark)
 
 ## TODO: use some validation library
 isValidUrl = (url) ->
@@ -149,40 +157,45 @@ validateRemark = (remark) ->
   if (bytes == 0)
     throw {error: 2, desc: "We do not store empty remarks"}
 
-validateCaptcha = (req, callback) ->
-  data = {
-    remoteip:  req.connection.remoteAddress,
-    challenge: req.body.recaptcha_challenge_field,
-    response:  req.body.recaptcha_response_field
-  }
-
-  pubKey = config.captcha.service.publicKey
-  privKey = config.captcha.service.privateKey
-  recaptcha = new Recaptcha(pubKey, privKey, data)
-
-  recaptcha.verify( callback)
-
-app.post('/remark/', (req, res) ->
-  validateCaptcha(req, (success, error) ->
-    if (!success)
-      res.send({error: 3, desc: "Invalid captcha. Try again, please"}, 400)
-      return
-
-    if req.is('*/json')
-      remark = req.body
-      ## TODO: add validation here
-      try
-        validateRemark(remark)
-        console.log("remark is valid")
+createShortAlias = (remark, res)->
+  db.collection("sequences", (err, collection) ->
+    collection.findAndModify({_id: 'remarkSeqNumber'}, [], {'$inc': {value: 1}}, {}, (err, value) ->
+      if (_.isUndefined(err) || err == null)
+        shortAlias = new Number(value.value).toString(36)
         db.collection("remark", (err, collection) ->
-          collection.insert(remark, (err, objects) ->
-              res.json(_.first(objects))
+          collection.update({_id: remark._id}, { '$set' : {shortAlias: shortAlias} }, (err, objects) ->
+            if (_.isUndefined(err) || err == null)
+              LOG.info("Short alias is: " + shortAlias)
+              remark.shortAlias = shortAlias
+            else
+              console.log(err)
+              LOG.error("Failed to set remark's short alias")
+            res.json(remark);
           )
         )
-      catch e
-        console.log(e)
-        res.send(e, 400)
+      else
+        LOG.error("Failed to create short alias")
+    )
   )
+
+createRemark = (remark, res) ->
+  db.collection("remark", (err, collection) ->
+      collection.insert(remark, (err, objects) ->
+          newRemark = _.first(objects)
+          createShortAlias(newRemark, res)
+      )
+  )
+
+
+app.post('/remark/', (req, res) ->
+  if req.is('*/json')
+    remark = req.body
+    remark = { links: remark.links, note: remark.note}
+    try
+      validateRemark(remark)
+      createRemark(remark, res)
+    catch e
+      res.send(e, 400)
 )
 
 app.put('/remark', (req, res) ->
@@ -196,10 +209,8 @@ assignShortLink = (remark, res) ->
       link += ":" + config.server.port
     link += "/#remark/" + remark._id
 
-    console.log("requesting short link for: " + link)
     urlshortener.makeShort(link, (shortLink, err) ->
         if (shortLink != null)
-          console.log(shortLink)
           remark.shortLink = shortLink;
           res.send(remark)
           db.collection("remark", (err, collection) ->
@@ -207,7 +218,6 @@ assignShortLink = (remark, res) ->
           )
           return
 
-        console.log("error occure")
         if (err != null)
           console.log(err)
     )

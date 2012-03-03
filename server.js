@@ -4,8 +4,6 @@
  *
  */
 
-
-
 // Configuration
 var config = {
     publicPath: __dirname + '/public/',
@@ -14,14 +12,6 @@ var config = {
         domain: "localhost",
         port: 4000
     },
-
-    captcha: {
-        service: {
-            publicKey: "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7",
-            privateKey: "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq"
-        }
-    },
-
     isProduction: false
 };
 
@@ -86,17 +76,11 @@ application.expressApp.configure (function() {
 application.expressApp.configure('production', function() {
     config.server.domain = "inremark.com";
 
-    config.captcha.service.publicKey = "6LeZLM4SAAAAAH7JZKoA5EbfkjNUFbLhNjFf55cV";
-    config.captcha.service.privateKey = "6LeZLM4SAAAAAD6l91xsRu1i4vr8pAJ7LFcfDRMC";
-
     config.isProduction = true;
 });
 
 application.expressApp.configure('development', function() {
     config.server.domain = "localhost";
-
-    config.captcha.service.publicKey = "6Lf6I84SAAAAANEd0hwYTV--kfFLiJzUilhdXlu7";
-    config.captcha.service.privateKey = "6Lf6I84SAAAAAG6FrCqB1-q8WGzo0WrBdnS_E-Bq";
 });
 
 
@@ -155,7 +139,6 @@ expressApp.get('/remark/:id', function(req, res) {
             });
         });
     });
-
 });
 
 function isValidUrl(url) {

@@ -49,13 +49,6 @@ var CreateView = Backbone.View.extend({
 
             $(that.el).html(html);
 
-            // TODO: cache it!
-            require(["/captcha.js", "http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"], function(module) {
-                Recaptcha.create(RecaptchaPublicKey, "captcha", {
-                    callback: function() {}
-                });
-            });
-
             deferedObj.resolve();
         });
 
@@ -163,8 +156,13 @@ var CreateView = Backbone.View.extend({
             recaptcha_response_field: $("#recaptcha_response_field").val()
         }, {
             success:function (model, response) {
-                debug("model save and got id: " + model.id);
-                InstantRemark.router.navigate('remark/' + model.id, {trigger:true});
+                var shortAlias = model.get('shortAlias');
+                debug("model save and got id: " + model.id + " and short alias: " + shortAlias);
+
+                if (shortAlias == null || model.shortAlias == '')
+                    InstantRemark.router.navigate( model.id, {trigger:true});
+                else
+                    InstantRemark.router.navigate( shortAlias, {trigger:true});
             },
 
             error:function (model, response) {
