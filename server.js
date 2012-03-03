@@ -89,14 +89,19 @@ application.db = new mongoDb.Db("instantremark",
     new mongoDb.Server('localhost', 27017, {}), {});
 
 application.db.open(function() {
-    application.state.setBitReady('db.ready');
+
+    db.collection('sequences', function(err, collection) {
+        collection.insert({_id: 'remarkSeqNumber', value: 1});
+
+        application.state.setBitReady('db.ready');
+    });
 });
 
 
-/// Start listening at the end
+/// Start listening when everyone is ready
 application.onReady = function() {
     console.log('application is initialized');
-    application.expressApp.listen(4000);
+    application.expressApp.listen(config.server.port);
 };
 
 
@@ -115,23 +120,15 @@ var db = application.db;
  * Getting remark by :id
  *
  */
-expressApp.get('/remark/:id', function(req, res) {
-    var remarkId;
-    try {
-        remarkId = new DbObjectID.createFromHexString(req.params.id);
-    } catch (ex) {
-        res.send(400);
-        return;
-    }
-
-    db.collection('remark', function(err, collection) {
-        collection.find({'_id': remarkId}, function(err, cursor) {
+function getRemarkByShortAlias(shortAlias, res) {
+    db.collection("remark", function(err, collection) {
+        collection.find({'shortAlias' : shortAlias }, function (err, cursor) {
             if (err != null) {
-                res.send(500);
-                return;
+                res.send(500)
+                return
             }
 
-            cursor.nextObject(function(err, obj) {
+            cursor.nextObject( function(err, obj) {
                 if (obj != null)
                     res.json(obj);
                 else
@@ -139,7 +136,40 @@ expressApp.get('/remark/:id', function(req, res) {
             });
         });
     });
-});
+}
+
+function getRemarkById (remarkId, res) {
+    db.collection("remark", function (err, collection) {
+        collection.find({'_id' : remarkId }, function (err, cursor) {
+            if (err != null) {
+                res.send(500);
+                return;
+            }
+
+            cursor.nextObject(function (err, obj) {
+                if (obj != null)
+                    res.json(obj);
+                else
+                    res.send(404);
+            });
+
+        });
+    });
+}
+
+function getRemark (req, res) {
+    try {
+        var remarkId = new DbObjectID.createFromHexString(req.params.id);
+        getRemarkById(remarkId, res);
+    } catch (ex) {
+        getRemarkByShortAlias(req.params.id, res);
+    }
+}
+
+expressApp.get('/remark/:id', getRemark);
+
+expressApp.get('/:id', getRemark);
+
 
 function isValidUrl(url) {
     return /^([a-z]([a-z]|\d|\+|-|\.)*):(\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?((\[(|(v[\da-f]{1,}\.(([a-z]|\d|-|\.|_|~)|[!\$&'\(\)\*\+,;=]|:)+))\])|((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=])*)(:\d*)?)(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*|(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)|((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)|((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)){0})(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.test(url);
@@ -167,23 +197,54 @@ function validateRemark(remark) {
         throw {error: 2, desc: "We do not store empty remarks"};
 }
 
+function createShortAlias(remark, res) {
+
+   db.collection("sequences", function(err, collection) {
+       collection.findAndModify({_id: 'remarkSeqNumber'},[], {'$inc': {value: 1}}, {}, function(err, value) {
+            if (_.isUndefined(err) || err == null) {
+                var shortAlias = new Number(value.value).toString(36);
+                db.collection("remark", function(err, collection) {
+                    collection.update({_id: remark._id},{ '$set' : {shortAlias: shortAlias} }, function (err, objects) {
+                        if (_.isUndefined(err) || err == null) {
+                            remark.shortAlias = shortAlias;
+                        } else {
+                            console.log(err);
+                        }
+                        res.json(remark);
+                    });
+                });
+            } else {
+                console.log("Failed to create short alias");
+            }
+       });
+   });
+}
+
+function createRemark(remark, res) {
+    db.collection('remark', function(err, collection) {
+        collection.insert(remark, function(err, objects) {
+            var newRamark = _.first(objects);
+            createShortAlias(newRamark, res);
+        });
+    });
+}
+
 /**
  * Create new remark
  */
 expressApp.post('/remark/', function(req, res) {
-    if (req.is('*/json'))
-        remark = req.body
-    try {
-        validateRemark(remark);
-        console.log("remark is valid");
-        db.collection("remark", function(err, collection) {
-            collection.insert(remark, function(err, objects) {
-                res.json(_.first(objects));
-            });
-        });
-    } catch (e) {
-        console.log(e);
-        res.send(e, 400);
+    if (req.is('*/json')) {
+        var remark = req.body;
+        remark = {links: remark.links, note: remark.note};
+        try {
+            validateRemark(remark);
+            createRemark(remark, res);
+        } catch (e) {
+            console.log(e);
+            res.send(e, 400);
+        }
+    } else {
+        console.log("not json");
     }
 });
 
@@ -196,7 +257,7 @@ expressApp.put('/remark', function(req, res) {
 });
 
 
-var urlshortener = require("./urlshortener")
+var urlshortener = require("./urlshortener");
 
 function assignShortLink(remark, res) {
 
@@ -250,3 +311,4 @@ expressApp.post('/remark/:id/shortlink', function(req, res) {
         });
     });
 });
+
